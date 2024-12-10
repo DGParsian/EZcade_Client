@@ -28,16 +28,20 @@ namespace EZcade_Client
         {
             try
             {
-                TcpListener Ezcadeserver = new TcpListener(IPAddress.Parse(EzcadeIp), EzcadePort);
+                Ezcadeserver = new TcpListener(IPAddress.Parse(EzcadeIp), EzcadePort);
                 Ezcadeserver.Start();
                 Ezcadeserver.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                Ezcadeclient = Ezcadeserver.AcceptTcpClient();
-                Ezcadestream = Ezcadeclient.GetStream();
+                
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Client error: {ex.Message}");
             }
+        }
+        public void init()
+        {
+            Ezcadeclient = Ezcadeserver.AcceptTcpClient();
+            Ezcadestream = Ezcadeclient.GetStream();
         }
         public String Listen()
         {
@@ -77,9 +81,16 @@ namespace EZcade_Client
         public void Cleanup()
         {
             try {
+                
+                if(Ezcadeclient != null)
+                {
+                    Ezcadeclient.Close();
+                    Ezcadeclient.Dispose();
+                }
                 if (Ezcadeserver != null)
                 { 
                     Ezcadeserver.Stop();
+                    Ezcadeserver.Dispose();
                 }
             }
             catch{}

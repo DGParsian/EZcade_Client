@@ -111,7 +111,7 @@ namespace EZcade_Client
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error sending message: {ex.Message}");
+                
             }
             return "ERROR";
         }

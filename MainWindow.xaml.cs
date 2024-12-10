@@ -60,8 +60,10 @@ namespace EZcade_Client
                     while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         string request = ezcade_Connection_Handler.Listen();
+                        
                         Request_recived(request);
 
+                       
                     }
 
                         
@@ -102,6 +104,7 @@ namespace EZcade_Client
                     if (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
                         ezcade_Connection_Handler = new EZcade_Connection_Handler();
+                        ezcade_Connection_Handler.init();
                         EZcade_Listen_Thread.Start();
                     }
                 }
@@ -121,12 +124,18 @@ namespace EZcade_Client
 
         private void Request_recived(string request)
         {
-            string response = connection_handler.Request(request);
-            Dispatcher.Invoke(() =>
+            if (request != "")
             {
-                serial_number_TextBox.Text = response;
-                Enable_serialNumber_inteaction();
-            });
+                if (request != "ERROR")
+                {
+                    string response = connection_handler.Request(request);
+                    Dispatcher.Invoke(() =>
+                    {
+                        serial_number_TextBox.Text = response;
+                        Enable_serialNumber_inteaction();
+                    });
+                }
+            }
             //serial_number_TextBox.Text = response;
             //Enable_serialNumber_inteaction();
             //WaitForButtonPressAsync();
