@@ -52,7 +52,15 @@ namespace EZcade_Client
                 if (server_connection_status)
                 {
                     var Request = new JsonObject();
-                    Request["message"] = messageToSend;
+                    if(messageToSend != "status" && messageToSend != "TCP:Give me string")
+                    {
+                        Request["message"] = "SerialNumber";
+                        Request["model"] = messageToSend;
+                    }
+                    else
+                    { 
+                        Request["message"] = messageToSend;
+                    }
 
                     string jsonString = JsonSerializer.Serialize(Request);
                     byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
@@ -126,7 +134,7 @@ namespace EZcade_Client
 
                 string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-
+                testDatabase();
                 if (response.Equals("is_connected"))
                 {
                     server_connection_status = true;
@@ -149,6 +157,60 @@ namespace EZcade_Client
                 server_connection_status = false;
                 return false;
             }
+
+        }
+
+        private void testDatabase()
+        {
+            try
+            {
+                var Request = new JsonObject();
+                Request["message"] = "SerialNumber";
+                Request["model"] = "04pt";
+
+                string jsonString = JsonSerializer.Serialize(Request);
+
+
+
+
+                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
+                if (stream != null)
+                {
+                    stream.Write(dataToSend, 0, dataToSend.Length);
+                }
+                else
+                {
+                  
+                }
+
+
+                byte[] buffer = new byte[1024];
+                int bytesRead = 0;
+
+                //var timeoutThread = new Thread(() =>
+                //{
+
+                //    if (stream != null)
+                //    {
+                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                //    }
+
+                //});
+
+                //timeoutThread.Start();  
+                //Thread.Sleep(1000);
+
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+                
+
+                string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+
+                Console.WriteLine(response);
+            }
+
+            catch { }
+
         }
 
         public void CloseConnection()
