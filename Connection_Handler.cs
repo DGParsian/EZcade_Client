@@ -44,51 +44,7 @@ namespace EZcade_Client
             }
         }
 
-        //private void startEzcadeSucket()
-        //{
-        //    string EzcadeIp = "127.0.0.1"; 
-        //    int EzcadePort = 1000;
-
-
-        //    var EZcade_Listen_Thread = new Thread(() =>
-        //    {
-
-        //        TcpListener Ezcadeserver = new TcpListener(IPAddress.Parse(EzcadeIp), EzcadePort);
-        //        Ezcadeserver.Start();
-        //        Ezcadeserver.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        //        TcpClient Ezcadeclient = Ezcadeserver.AcceptTcpClient();
-        //        NetworkStream Ezcadestream = Ezcadeclient.GetStream();
-
-        //        while (true)
-        //        {
-                    
-        //            byte[] buffer = new byte[1024];
-        //            int bytesRead = Ezcadestream.Read(buffer, 0, buffer.Length);
-        //            string receivedData = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-
-            //        MessageBox.Show($"Reqesting: {receivedData}");
-
-            //        if (receivedData == "TCP:Give me string")
-            //        {
-            //            string response = Request(receivedData);
-
-            //            byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-            //            Ezcadestream.Write(responseBytes, 0, responseBytes.Length);
-
-            //            MessageBox.Show(response);
-            //        }
-            //        else
-            //        {
-            //            MessageBox.Show("Unexpected command received!");
-            //        }
-            //    }
-                
-            //});
-        //    EZcade_Listen_Thread.Start();
-
-        //}
-
+       
         public string Request(string messageToSend)
         {
             try
@@ -179,7 +135,7 @@ namespace EZcade_Client
                 else
                 {
                     server_connection_status = false;
-                    return false;
+                    return false; 
                 }
             }
 
