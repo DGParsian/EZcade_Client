@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
@@ -11,8 +12,8 @@ namespace EZcade_Client
 {
     public class Connection_Handler
     {
-        //public string serverIp = "127.0.0.1";
-        public string serverIp = "213.207.200.115";
+        public string serverIp = "127.0.0.1";
+        //public string serverIp = "213.207.200.115";
 
         //public string serverIp = "192.168.1.122";
 
@@ -94,7 +95,11 @@ namespace EZcade_Client
             {
                 if (server_connection_status)
                 {
-                    byte[] dataToSend = Encoding.UTF8.GetBytes(messageToSend);
+                    var Request = new JsonObject();
+                    Request["message"] = messageToSend;
+
+                    string jsonString = JsonSerializer.Serialize(Request);
+                    byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
                     stream.Write(dataToSend, 0, dataToSend.Length);
 
 
@@ -121,8 +126,15 @@ namespace EZcade_Client
         {
             try
             {
+                var Request = new JsonObject();
+                Request["message"] = "status";
+
+                string jsonString = JsonSerializer.Serialize(Request);
                 
-                byte[] dataToSend = Encoding.UTF8.GetBytes("status");
+
+
+
+                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
                 if (stream != null)
                 {
                     stream.Write(dataToSend, 0, dataToSend.Length);
@@ -136,20 +148,20 @@ namespace EZcade_Client
                 byte[] buffer = new byte[1024];
                 int bytesRead = 0;
                 
-                var timeoutThread = new Thread(() =>
-                {
+                //var timeoutThread = new Thread(() =>
+                //{
 
-                    if (stream != null)
-                    {
-                        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    }
+                //    if (stream != null)
+                //    {
+                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                //    }
    
-                });
+                //});
 
-                timeoutThread.Start();  
-                Thread.Sleep(1000);
-                
+                //timeoutThread.Start();  
+                //Thread.Sleep(1000);
 
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
                 if (bytesRead == 0)
                 {
                     server_connection_status = false;
