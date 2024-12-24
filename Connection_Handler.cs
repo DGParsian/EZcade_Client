@@ -105,7 +105,7 @@ namespace EZcade_Client
             try
             {
                 var Request = new JsonObject();
-                Request["message"] = "status";
+                Request["requestType"] = "status";
 
                 string jsonString = JsonSerializer.Serialize(Request);
                 
@@ -146,10 +146,11 @@ namespace EZcade_Client
                     return false;
                 }
 
-                string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                var Response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
 
                 //testDatabase();
-                if (response.Equals("is_connected"))
+                if (Response["status"].ToString() == "is_connected")
                 {
                     server_connection_status = true;
                     return true;

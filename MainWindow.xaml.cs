@@ -12,6 +12,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using System;
+using System.Text.Json.Nodes;
 
 namespace EZcade_Client
 {
@@ -174,14 +175,33 @@ namespace EZcade_Client
             {
                 if (request != "ERROR")
                 {
-                    string response = connection_handler.Request(request);
+                    var Request = new JsonObject();
+                    if (request == "TCP:Give me string")
+                    {
+                        Request["requestType"] = "test";
+
+                    }
+                    else
+                    {
+                        Request["requestType"] = "serialNumber";
+                        Request["model"] = request;
+                    }
+
+
+
+
+                    //string response = connection_handler.Request(request);
+                    var Response = connection_handler.Request_Json(Request);
+
                     Dispatcher.Invoke(() =>
                     {
-                        serial_number_TextBox.Text = response;
+                        serial_number_TextBox.Text = Response["serialNumber"].ToString();
                         Enable_serialNumber_inteaction();
                     });
                 }
             }
+
+             
             //serial_number_TextBox.Text = response;
             //Enable_serialNumber_inteaction();
             //WaitForButtonPressAsync();
