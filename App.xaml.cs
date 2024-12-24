@@ -1,5 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
+using System.IO;
+using System.Net.Sockets;
 using System.Windows;
 
 namespace EZcade_Client
@@ -10,12 +12,12 @@ namespace EZcade_Client
     public partial class App : Application
     {
 
-        public App()
+        protected override void OnStartup(StartupEventArgs e)
         {
-            // Subscribe to the exit event to run cleanup
+            base.OnStartup(e);
+
         }
-        
-        
+
 
     }
 

@@ -84,6 +84,20 @@ namespace EZcade_Client
             }
             return "ERROR";
         }
+        public JsonObject Request_Json(JsonObject request)
+        {
+            string request_jsonString = JsonSerializer.Serialize(request);
+            byte[] dataToSend = Encoding.UTF8.GetBytes(request_jsonString);
+            stream.Write(dataToSend, 0, dataToSend.Length);
+
+
+            byte[] buffer = new byte[1024];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            
+            string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            JsonObject response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
+            return response;
+        }
 
         
         public bool Status_Check()
@@ -134,7 +148,7 @@ namespace EZcade_Client
 
                 string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                testDatabase();
+                //testDatabase();
                 if (response.Equals("is_connected"))
                 {
                     server_connection_status = true;
@@ -159,7 +173,7 @@ namespace EZcade_Client
             }
 
         }
-
+        
         private void testDatabase()
         {
             try

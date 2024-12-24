@@ -35,8 +35,11 @@ namespace EZcade_Client
         {
             InitializeComponent();
             connection_handler = new Connection_Handler();
-            
-            
+
+            LoginWindow loginWindow = new LoginWindow(connection_handler);
+            loginWindow.ShowDialog();
+
+
             if (connection_handler.Status_Check())
             {
                 //MessageBox.Show("connected");
@@ -49,6 +52,49 @@ namespace EZcade_Client
             //Handle_EZ_Request();
             
         }
+        //private string login()
+        //{
+           
+            
+        //    if ( == true)
+        //    {
+        //        try
+        //        {
+                    
+        //            // Send login credentials to the server
+        //            writer.WriteLine(username);
+        //            writer.WriteLine(password);
+
+        //            // Handle server response
+        //            string response = reader.ReadLine();
+        //            if (response == "Admin Login Successful")
+        //            {
+        //                MessageBox.Show("Welcome, Admin!");
+        //                // Proceed to admin functionality
+        //            }
+        //            else if (response == "User Login Successful")
+        //            {
+        //                MessageBox.Show("Welcome, Regular User!");
+        //                // Proceed to user functionality
+        //            }
+        //            else
+        //            {
+        //                MessageBox.Show("Invalid credentials. Connection will close.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    
+        //        }
+        //    }
+           
+
+        //}
+
+
+
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private void Init_Form()
