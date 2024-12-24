@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
@@ -11,8 +12,8 @@ namespace EZcade_Client
 {
     public class Connection_Handler
     {
-        //public string serverIp = "127.0.0.1";
-        public string serverIp = "213.207.200.115";
+        public string serverIp = "127.0.0.1";
+        //public string serverIp = "213.207.200.115";
 
         //public string serverIp = "192.168.1.122";
 
@@ -43,58 +44,26 @@ namespace EZcade_Client
             }
         }
 
-        //private void startEzcadeSucket()
-        //{
-        //    string EzcadeIp = "127.0.0.1"; 
-        //    int EzcadePort = 1000;
-
-
-        //    var EZcade_Listen_Thread = new Thread(() =>
-        //    {
-
-        //        TcpListener Ezcadeserver = new TcpListener(IPAddress.Parse(EzcadeIp), EzcadePort);
-        //        Ezcadeserver.Start();
-        //        Ezcadeserver.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        //        TcpClient Ezcadeclient = Ezcadeserver.AcceptTcpClient();
-        //        NetworkStream Ezcadestream = Ezcadeclient.GetStream();
-
-        //        while (true)
-        //        {
-                    
-        //            byte[] buffer = new byte[1024];
-        //            int bytesRead = Ezcadestream.Read(buffer, 0, buffer.Length);
-        //            string receivedData = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-
-            //        MessageBox.Show($"Reqesting: {receivedData}");
-
-            //        if (receivedData == "TCP:Give me string")
-            //        {
-            //            string response = Request(receivedData);
-
-            //            byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-            //            Ezcadestream.Write(responseBytes, 0, responseBytes.Length);
-
-            //            MessageBox.Show(response);
-            //        }
-            //        else
-            //        {
-            //            MessageBox.Show("Unexpected command received!");
-            //        }
-            //    }
-                
-            //});
-        //    EZcade_Listen_Thread.Start();
-
-        //}
-
+       
         public string Request(string messageToSend)
         {
             try
             {
                 if (server_connection_status)
                 {
-                    byte[] dataToSend = Encoding.UTF8.GetBytes(messageToSend);
+                    var Request = new JsonObject();
+                    if(messageToSend != "status" && messageToSend != "TCP:Give me string")
+                    {
+                        Request["message"] = "SerialNumber";
+                        Request["model"] = messageToSend;
+                    }
+                    else
+                    { 
+                        Request["message"] = messageToSend;
+                    }
+
+                    string jsonString = JsonSerializer.Serialize(Request);
+                    byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
                     stream.Write(dataToSend, 0, dataToSend.Length);
 
 
@@ -115,14 +84,35 @@ namespace EZcade_Client
             }
             return "ERROR";
         }
+        public JsonObject Request_Json(JsonObject request)
+        {
+            string request_jsonString = JsonSerializer.Serialize(request);
+            byte[] dataToSend = Encoding.UTF8.GetBytes(request_jsonString);
+            stream.Write(dataToSend, 0, dataToSend.Length);
+
+
+            byte[] buffer = new byte[1024];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            
+            string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            JsonObject response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
+            return response;
+        }
 
         
         public bool Status_Check()
         {
             try
             {
+                var Request = new JsonObject();
+                Request["message"] = "status";
+
+                string jsonString = JsonSerializer.Serialize(Request);
                 
-                byte[] dataToSend = Encoding.UTF8.GetBytes("status");
+
+
+
+                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
                 if (stream != null)
                 {
                     stream.Write(dataToSend, 0, dataToSend.Length);
@@ -136,20 +126,20 @@ namespace EZcade_Client
                 byte[] buffer = new byte[1024];
                 int bytesRead = 0;
                 
-                var timeoutThread = new Thread(() =>
-                {
+                //var timeoutThread = new Thread(() =>
+                //{
 
-                    if (stream != null)
-                    {
-                        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    }
+                //    if (stream != null)
+                //    {
+                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                //    }
    
-                });
+                //});
 
-                timeoutThread.Start();  
-                Thread.Sleep(1000);
-                
+                //timeoutThread.Start();  
+                //Thread.Sleep(1000);
 
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
                 if (bytesRead == 0)
                 {
                     server_connection_status = false;
@@ -158,7 +148,7 @@ namespace EZcade_Client
 
                 string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-
+                //testDatabase();
                 if (response.Equals("is_connected"))
                 {
                     server_connection_status = true;
@@ -167,7 +157,7 @@ namespace EZcade_Client
                 else
                 {
                     server_connection_status = false;
-                    return false;
+                    return false; 
                 }
             }
 
@@ -181,6 +171,60 @@ namespace EZcade_Client
                 server_connection_status = false;
                 return false;
             }
+
+        }
+        
+        private void testDatabase()
+        {
+            try
+            {
+                var Request = new JsonObject();
+                Request["message"] = "SerialNumber";
+                Request["model"] = "04pt";
+
+                string jsonString = JsonSerializer.Serialize(Request);
+
+
+
+
+                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
+                if (stream != null)
+                {
+                    stream.Write(dataToSend, 0, dataToSend.Length);
+                }
+                else
+                {
+                  
+                }
+
+
+                byte[] buffer = new byte[1024];
+                int bytesRead = 0;
+
+                //var timeoutThread = new Thread(() =>
+                //{
+
+                //    if (stream != null)
+                //    {
+                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                //    }
+
+                //});
+
+                //timeoutThread.Start();  
+                //Thread.Sleep(1000);
+
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+                
+
+                string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+
+                Console.WriteLine(response);
+            }
+
+            catch { }
+
         }
 
         public void CloseConnection()
