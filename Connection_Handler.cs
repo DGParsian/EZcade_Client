@@ -14,7 +14,6 @@ namespace EZcade_Client
     {
         public string serverIp = "127.0.0.1";
         //public string serverIp = "213.207.200.115";
-
         //public string serverIp = "192.168.1.122";
 
         public int serverPort = 1001;         
@@ -44,46 +43,6 @@ namespace EZcade_Client
             }
         }
 
-       
-        public string Request(string messageToSend)
-        {
-            try
-            {
-                if (server_connection_status)
-                {
-                    var Request = new JsonObject();
-                    if(messageToSend != "status" && messageToSend != "TCP:Give me string")
-                    {
-                        Request["message"] = "SerialNumber";
-                        Request["model"] = messageToSend;
-                    }
-                    else
-                    { 
-                        Request["message"] = messageToSend;
-                    }
-
-                    string jsonString = JsonSerializer.Serialize(Request);
-                    byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
-                    stream.Write(dataToSend, 0, dataToSend.Length);
-
-
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    string response_string = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                    return response_string;
-                }
-                else
-                {
-                    MessageBox.Show("Unable to send message, server connection is not established.");
-                }
-            }
-            catch (Exception ex)
-            {
-                
-            }
-            return "ERROR";
-        }
         public JsonObject Request_Json(JsonObject request)
         {
             string request_jsonString = JsonSerializer.Serialize(request);
@@ -125,19 +84,6 @@ namespace EZcade_Client
                 
                 byte[] buffer = new byte[1024];
                 int bytesRead = 0;
-                
-                //var timeoutThread = new Thread(() =>
-                //{
-
-                //    if (stream != null)
-                //    {
-                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                //    }
-   
-                //});
-
-                //timeoutThread.Start();  
-                //Thread.Sleep(1000);
 
                 bytesRead = stream.Read(buffer, 0, buffer.Length);
                 if (bytesRead == 0)
@@ -155,11 +101,10 @@ namespace EZcade_Client
                     server_connection_status = true;
                     return true;
                 }
-                else
-                {
-                    server_connection_status = false;
-                    return false; 
-                }
+                
+                server_connection_status = false; 
+                return false; 
+                
             }
 
             catch (NullReferenceException)
@@ -175,59 +120,6 @@ namespace EZcade_Client
 
         }
         
-        private void testDatabase()
-        {
-            try
-            {
-                var Request = new JsonObject();
-                Request["message"] = "SerialNumber";
-                Request["model"] = "04pt";
-
-                string jsonString = JsonSerializer.Serialize(Request);
-
-
-
-
-                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
-                if (stream != null)
-                {
-                    stream.Write(dataToSend, 0, dataToSend.Length);
-                }
-                else
-                {
-                  
-                }
-
-
-                byte[] buffer = new byte[1024];
-                int bytesRead = 0;
-
-                //var timeoutThread = new Thread(() =>
-                //{
-
-                //    if (stream != null)
-                //    {
-                //        bytesRead = stream.Read(buffer, 0, buffer.Length);
-                //    }
-
-                //});
-
-                //timeoutThread.Start();  
-                //Thread.Sleep(1000);
-
-                bytesRead = stream.Read(buffer, 0, buffer.Length);
-                
-
-                string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-
-                Console.WriteLine(response);
-            }
-
-            catch { }
-
-        }
-
         public void CloseConnection()
         {
             try
