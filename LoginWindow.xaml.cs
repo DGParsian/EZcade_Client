@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+
 
 namespace EZcade_Client
 {
@@ -27,6 +17,7 @@ namespace EZcade_Client
             _connection_Handler = connection;
         }
 
+        #region Event Handlers
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             Username = UsernameTextBox.Text;
@@ -37,7 +28,7 @@ namespace EZcade_Client
                 MessageBox.Show("Please enter both username and password.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            else 
+            else
             {
                 JsonObject login_response = new JsonObject();
                 JsonObject login_request = new JsonObject();
@@ -50,16 +41,15 @@ namespace EZcade_Client
 
                 login_response = _connection_Handler.Request_Json(login_request);
 
-
-                if (login_response == null || login_response["result"].ToString() != "true") {
+                if (login_response == null || login_response["result"].ToString() != "true")
+                {
                     MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 DialogResult = true;
                 Close();
             }
-
-            
         }
+        #endregion
     }
 }
