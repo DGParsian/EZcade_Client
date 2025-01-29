@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -45,7 +46,11 @@ namespace EZcade_Client
 
         public JsonObject Request_Json(JsonObject request)
         {
+
+
             string request_jsonString = JsonSerializer.Serialize(request);
+
+            request_jsonString = EncryptData(request_jsonString);
             byte[] dataToSend = Encoding.UTF8.GetBytes(request_jsonString);
             stream.Write(dataToSend, 0, dataToSend.Length);
 
@@ -54,6 +59,8 @@ namespace EZcade_Client
             int bytesRead = stream.Read(buffer, 0, buffer.Length);
             
             string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+
+            response_jsonString = DecryptData(response_jsonString);
             JsonObject response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
             return response;
         }
@@ -67,8 +74,8 @@ namespace EZcade_Client
                 Request["requestType"] = "status";
 
                 string jsonString = JsonSerializer.Serialize(Request);
-                
 
+                jsonString = EncryptData(jsonString);
 
 
                 byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
@@ -93,6 +100,9 @@ namespace EZcade_Client
                 }
 
                 string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+
+
+                response_jsonString = DecryptData(response_jsonString);
                 var Response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
 
                 //testDatabase();
@@ -119,7 +129,46 @@ namespace EZcade_Client
             }
 
         }
-        
+
+
+
+        public static string EncryptData(string data)
+        {
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Convert.FromBase64String("5EjbJ1cMefXwTG8vqn5WPkpQbV5LZp89JaXbkGgNctM="); ;
+                aesAlg.IV = Convert.FromBase64String("n1QSgyiWu1Efo7N7EbggMA=="); ;
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
+
+                using (ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV))
+                {
+                    byte[] dataBytes = Encoding.UTF8.GetBytes(data);
+                    byte[] encryptedData = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+                    return Convert.ToBase64String(encryptedData);
+                }
+            }
+        }
+
+        public static string DecryptData(string encryptedData)
+        {
+
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Convert.FromBase64String("5EjbJ1cMefXwTG8vqn5WPkpQbV5LZp89JaXbkGgNctM="); ;
+                aesAlg.IV = Convert.FromBase64String("n1QSgyiWu1Efo7N7EbggMA=="); ;
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
+
+                using (ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV))
+                {
+                    byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
+                    byte[] decryptedData = decryptor.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
+                    return Encoding.UTF8.GetString(decryptedData);
+                }
+            }
+        }
+
         public void CloseConnection()
         {
             try
