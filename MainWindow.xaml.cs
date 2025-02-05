@@ -140,6 +140,8 @@ namespace EZcade_Client
         #region Event Handlers
         private void print_Buttun_Click(object sender, RoutedEventArgs e)
         {
+            Disable_serialNumber_inteaction();
+            activate_product(serial_number_TextBox.Text);
             ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text);
             serial_number_TextBox.Text = "start requesting in EZcade";
             EZcade_Listen_Thread = new Thread(() =>
@@ -153,6 +155,16 @@ namespace EZcade_Client
             });
 
             EZcade_Listen_Thread.Start();
+        }
+
+        private void activate_product(string serialNumber)
+        {
+            var Request = new JsonObject();
+            Request["requestType"] = "activation";
+
+            Request["serialNumber"] = serialNumber;
+            var Response = connection_handler.Request_Json(Request);
+            
         }
 
         private void Edit_Button_Click(object sender, RoutedEventArgs e)
@@ -186,6 +198,7 @@ namespace EZcade_Client
 
         private void Cancel_Button_Click(object sender, RoutedEventArgs e)
         {
+            Disable_serialNumber_inteaction();
             serial_number_TextBox.Text = "start requesting in EZcade";
             EZcade_Listen_Thread = new Thread(() =>
             {
@@ -198,6 +211,7 @@ namespace EZcade_Client
             });
 
             EZcade_Listen_Thread.Start();
+
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
