@@ -48,6 +48,11 @@ namespace EZcade_Client
                 byte[] buffer = new byte[1024];
                 int bytesRead = Ezcadestream.Read(buffer, 0, buffer.Length);
                 string receivedData = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                
+
+
+
+
                 return receivedData;
             }
             catch
@@ -56,13 +61,17 @@ namespace EZcade_Client
             }
         }
 
-        public void SendAndPrint(String response)
+        public void SendAndPrint(String response, bool showMessage = false)
         {
             try
             {
                 byte[] responseBytes = Encoding.ASCII.GetBytes(response);
                 Ezcadestream.Write(responseBytes, 0, responseBytes.Length);
-                MessageBox.Show("printed " + response);
+                if (showMessage)
+                {
+                    MessageBox.Show("printed " + response);
+                }
+                
             }
             catch (Exception e)
             {

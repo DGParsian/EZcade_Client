@@ -8,9 +8,15 @@
         Closing="Window_Closing">
     <Grid>
         <Label x:Name="ip_Lable" Content="IP Address" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+
+
         <TextBox x:Name="serial_number_TextBox" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="193" IsEnabled="False" Height="61"/>
         <Button x:Name="print_Buttun" Content="Print" HorizontalAlignment="Right" Margin="0,253,286,0" VerticalAlignment="Top" Height="39" Width="61" Click="print_Buttun_Click"/>
         <Button x:Name="Edit_Button" Content="Edit" HorizontalAlignment="Center" Margin="0,252,0,0" VerticalAlignment="Top" Height="39" Width="61" Click="Edit_Button_Click"/>
         <Button x:Name="Cancel_Button" Content="Cancel" HorizontalAlignment="Left" Margin="286,252,0,0" VerticalAlignment="Top" Height="39" Width="61" Click="Cancel_Button_Click"/>
+        <CheckBox Content="Automation" HorizontalAlignment="Left" Margin="15,41,0,0" VerticalAlignment="Top" Checked="Automation_CheckBox_Checked" 
+                  Unchecked="Automation_CheckBox_Unchecked" IsChecked="False"/>
+        <CheckBox Content="BarCode" HorizontalAlignment="Left" Margin="15,69,0,0" VerticalAlignment="Top" Checked="DataMatrix_CheckBox_Checked" 
+                  Unchecked="DataMatrix_CheckBox_Unchecked" IsChecked="False"/>
     </Grid>
 </Window>

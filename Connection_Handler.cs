@@ -13,9 +13,9 @@ namespace EZcade_Client
 {
     public class Connection_Handler
     {
-        public string serverIp = "127.0.0.1";
+        //public string serverIp = "127.0.0.1";
         //public string serverIp = "213.207.200.115";
-        //public string serverIp = "192.168.1.122";
+        public string serverIp = "192.168.1.122";
 
         public int serverPort = 1001;         
         public bool server_connection_status { get; set; }
