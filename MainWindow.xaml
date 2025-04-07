@@ -1,16 +1,43 @@
 ﻿<Window x:Class="EZcade_Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="EZcade Client" Height="450" Width="800" Background="#f4f4f4"
+                     
+        Icon="/logo.ico"
         Closing="Window_Closing">
-    <Grid>
-        <Label x:Name="ip_Lable" Content="IP Address" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="serial_number_TextBox" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="193" IsEnabled="False" Height="61"/>
-        <Button x:Name="print_Buttun" Content="Print" HorizontalAlignment="Right" Margin="0,253,286,0" VerticalAlignment="Top" Height="39" Width="61" Click="print_Buttun_Click"/>
-        <Button x:Name="Edit_Button" Content="Edit" HorizontalAlignment="Center" Margin="0,252,0,0" VerticalAlignment="Top" Height="39" Width="61" Click="Edit_Button_Click"/>
-        <Button x:Name="Cancel_Button" Content="Cancel" HorizontalAlignment="Left" Margin="286,252,0,0" VerticalAlignment="Top" Height="39" Width="61" Click="Cancel_Button_Click"/>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Label x:Name="ip_Lable" Content="IP Address" FontSize="16" FontWeight="Bold"
+               HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,10"/>
+
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,41,0,235" Grid.RowSpan="5" >
+            <CheckBox Content="Automation" Margin =" 0,41,0,10" Style="{StaticResource CustomCheckBox}"
+                      Checked="Automation_CheckBox_Checked"
+                      Unchecked="Automation_CheckBox_Unchecked" IsChecked="False"/>
+            <CheckBox Content="BarCode" Style="{StaticResource CustomCheckBox}"
+                      Checked="DataMatrix_CheckBox_Checked"
+                      Unchecked="DataMatrix_CheckBox_Unchecked" IsChecked="False"/>
+        </StackPanel>
+
+        <TextBox x:Name="serial_number_TextBox" Grid.Row="2"
+                 HorizontalAlignment="Center" VerticalAlignment="Top"
+                 Width="270" Height="50" Style="{StaticResource CustomTextBox}"
+                 IsEnabled="False" TextAlignment="Center" Margin="0,163,0,0"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,238,0,35" Width="250">
+            <Button x:Name="print_Buttun" Content="Print" Width="75" Height="40"
+                    Click="print_Buttun_Click" Style="{StaticResource CustomButton}"/>
+            <Button x:Name="Edit_Button" Content="Edit" Width="75" Height="40"
+                    Click="Edit_Button_Click" Style="{StaticResource CustomButton}" Margin="10,0"/>
+            <Button x:Name="Cancel_Button" Content="Cancel" Width="75" Height="40"
+                    Click="Cancel_Button_Click" Style="{StaticResource CustomButton}" RenderTransformOrigin="0.875,0.497"/>
+        </StackPanel>
     </Grid>
 </Window>

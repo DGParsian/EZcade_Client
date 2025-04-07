@@ -1,10 +1,8 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
 using System.Text.Json.Nodes;
 
 namespace EZcade_Client
 {
-
     public partial class MainWindow : Window
     {
         #region Fields
@@ -14,6 +12,11 @@ namespace EZcade_Client
         Thread EZcade_Listen_Thread;
         Thread EZcade_Start_Thread;
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+
+        private bool IsAutomated = false;
+        private bool IsDataMatrixActive = false;
+
         #endregion
 
         #region Constructor
@@ -50,11 +53,10 @@ namespace EZcade_Client
             {
                 try
                 {
-                    while (!_cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        string request = ezcade_Connection_Handler.Listen();
-                        Request_recived(request);
-                    }
+               
+                    string request = ezcade_Connection_Handler.Listen();
+                    Request_recived(request);
+                
                 }
                 catch { }
             });
@@ -103,13 +105,53 @@ namespace EZcade_Client
 
                     var Response = connection_handler.Request_Json(Request);
 
-                    Dispatcher.Invoke(() =>
+
+
+                    
+                    if (IsAutomated)
                     {
-                        serial_number_TextBox.Text = Response["serialNumber"].ToString();
-                        Enable_serialNumber_inteaction();
-                    });
+                        
+                        print_Automated(Response["serialNumber"].ToString());
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            serial_number_TextBox.Text = Response["serialNumber"].ToString();
+                            Enable_serialNumber_inteaction();
+                        });
+                    }
+
+                    
+
                 }
             }
+        }
+
+        private void print_Automated(string serialNumber)
+        {
+            activate_product(serialNumber);
+            ezcade_Connection_Handler.SendAndPrint(serialNumber);
+
+            if (IsDataMatrixActive)
+            {
+                ezcade_Connection_Handler.Listen();
+                ezcade_Connection_Handler.SendAndPrint(serialNumber);
+            }
+
+
+            
+            EZcade_Listen_Thread = new Thread(() =>
+            {
+                try
+                {
+                    string request = ezcade_Connection_Handler.Listen();
+                    Request_recived(request);
+                }
+                catch { }
+            });
+
+            EZcade_Listen_Thread.Start();
         }
         #endregion
 
@@ -142,7 +184,15 @@ namespace EZcade_Client
         {
             Disable_serialNumber_inteaction();
             activate_product(serial_number_TextBox.Text);
-            ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text);
+            ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text,showMessage:true);
+
+            if (IsDataMatrixActive)
+            {
+                ezcade_Connection_Handler.Listen();
+                ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text);
+            }
+
+            
             serial_number_TextBox.Text = "start requesting in EZcade";
             EZcade_Listen_Thread = new Thread(() =>
             {
@@ -230,6 +280,24 @@ namespace EZcade_Client
                 MessageBox.Show(exeption.Message);
             }
         }
+
+        private void Automation_CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            IsAutomated = true;
+        }
+        private void Automation_CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            IsAutomated = false;
+        }
+        private void DataMatrix_CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            IsDataMatrixActive = true;
+        }
+        private void DataMatrix_CheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            IsDataMatrixActive = false;
+        }
+
         #endregion
     }
 }
