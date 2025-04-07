@@ -1,11 +1,8 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
 using System.Text.Json.Nodes;
-using System.Windows.Documents;
 
 namespace EZcade_Client
 {
-
     public partial class MainWindow : Window
     {
         #region Fields
@@ -283,7 +280,7 @@ namespace EZcade_Client
                 MessageBox.Show(exeption.Message);
             }
         }
-        #endregion
+
         private void Automation_CheckBox_Checked(object sender, RoutedEventArgs e)
         {
             IsAutomated = true;
@@ -301,6 +298,6 @@ namespace EZcade_Client
             IsDataMatrixActive = false;
         }
 
-
+        #endregion
     }
 }
