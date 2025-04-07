@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="EZcade Client" Height="450" Width="800" Background="#f4f4f4"
                      
-        Icon="D:\EZcade_Client\logo.ico"
+        Icon="/logo.ico"
         Closing="Window_Closing">
 
     <Grid Margin="20">
