@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Text.Json.Nodes;
+using EZcade_Client.Properties;
 
 namespace EZcade_Client
 {
@@ -25,22 +26,63 @@ namespace EZcade_Client
             InitializeComponent();
             connection_handler = new Connection_Handler();
 
-            LoginWindow loginWindow = new LoginWindow(connection_handler);
-            loginWindow.ShowDialog();
+            if (!AutoLogin(connection_handler))
+            {
+                LoginWindow loginWindow = new LoginWindow(connection_handler);
+                loginWindow.ShowDialog();
+            }
 
             if (connection_handler.Status_Check())
             {
                 Show_ip();
+                Init_Form();
             }
             else
             {
                 MessageBox.Show("not connected");
             }
-            Init_Form();
+            
         }
         #endregion
 
         #region Initialization
+
+        private bool AutoLogin(Connection_Handler connection_Handler)
+
+        {
+
+            //Settings.Default.SavedPassword = "";
+            //Settings.Default.Save();
+            var username = Settings.Default.SavedUsername;
+            var password = Settings.Default.SavedPassword;
+            
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                return false;
+            }
+            
+            JsonObject login_response = new JsonObject();
+            JsonObject login_request = new JsonObject();
+
+            login_request["requestType"] = "login";
+
+            login_request["userRole"] = "Ezcade_operator";
+            login_request["username"] = username;
+            login_request["password"] = password;
+
+            login_response = connection_Handler.Request_Json(login_request);
+
+            if (login_response == null || login_response["result"].ToString() != "true")
+            {
+                MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false ;
+            }
+            return true;
+
+        }
+
+
+
         private void Init_Form()
         {
             InitializeThreads();

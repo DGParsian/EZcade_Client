@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using System.Windows;
-
+using EZcade_Client.Properties;
 
 namespace EZcade_Client
 {
@@ -44,6 +44,11 @@ namespace EZcade_Client
                     MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                Settings.Default.SavedUsername = Username;
+                Settings.Default.SavedPassword = Password;
+                Settings.Default.Save();
+                
                 DialogResult = true;
                 Close();
             }
