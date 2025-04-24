@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using System.Text.Json.Nodes;
 using EZcade_Client.Properties;
+using System.Windows.Controls;
+using Main_Server.DTOs.Ezcade;
 
 namespace EZcade_Client
 {
@@ -17,6 +19,11 @@ namespace EZcade_Client
 
         private bool IsAutomated = false;
         private bool IsDataMatrixActive = false;
+
+        public List<string> FirstOptions { get; set; } = new() { "Select Batch"};
+        public List<string> SecondOptions { get; set; } = new() { "Select Model"};
+
+        public BatchListDto_Ezcade batchList{ get; set; }
 
         #endregion
 
@@ -40,6 +47,18 @@ namespace EZcade_Client
             else
             {
                 MessageBox.Show("not connected");
+            }
+            DataContext = this;
+            firstComboBox.SelectedIndex = 0;
+            secondComboBox.SelectedIndex = 0;
+
+
+
+            batchList = connection_handler.GetBatchList();
+
+            foreach (var batch in batchList.Batches)
+            {
+                FirstOptions.Add(batch.Name);
             }
             
         }
@@ -130,6 +149,7 @@ namespace EZcade_Client
         #region Request Handling
         private void Request_recived(string request)
         {
+            request = request.ToUpper();
             if (request != "")
             {
                 if (request != "ERROR")
@@ -142,26 +162,34 @@ namespace EZcade_Client
                     else
                     {
                         Request["requestType"] = "serialNumber";
+
+                        
                         Request["model"] = request;
+                        Request["batch"] = firstComboBox.SelectedItem.ToString();
                     }
 
-                    var Response = connection_handler.Request_Json(Request);
-
-
-
-                    
-                    if (IsAutomated)
+                    if (request == secondComboBox.SelectedItem.ToString())
                     {
-                        
-                        print_Automated(Response["serialNumber"].ToString());
+                        var Response = connection_handler.Request_Json(Request);
+
+                        if (IsAutomated)
+                        {
+
+                            print_Automated(Response["serialNumber"].ToString());
+                        }
+                        else
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                serial_number_TextBox.Text = Response["serialNumber"].ToString();
+                                Enable_serialNumber_inteaction();
+                            });
+                        }
+
                     }
                     else
                     {
-                        Dispatcher.Invoke(() =>
-                        {
-                            serial_number_TextBox.Text = Response["serialNumber"].ToString();
-                            Enable_serialNumber_inteaction();
-                        });
+                        Console.WriteLine("selected model is not the same as laser file configuration");
                     }
 
                     
@@ -198,6 +226,29 @@ namespace EZcade_Client
         #endregion
 
         #region UI Updates
+
+        private void firstComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedBatch = firstComboBox.SelectedItem as string;
+            SecondOptions.Clear();
+            SecondOptions.Add("Select Model");
+            foreach (var batch in batchList.Batches)
+            {
+                if (selectedBatch == batch.Name)
+                {
+                    
+                    foreach (var model in batch.Models)
+                    {
+                        SecondOptions.Add(model);
+                    }
+                }                
+            }
+            secondComboBox.ItemsSource = null;
+            secondComboBox.SelectedIndex = 0;
+            secondComboBox.ItemsSource = SecondOptions;
+        }
+
+
         private void Show_ip()
         {
             string ip = connection_handler.serverIp;

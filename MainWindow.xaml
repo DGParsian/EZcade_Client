@@ -17,15 +17,31 @@
         <Label x:Name="ip_Lable" Content="IP Address" FontSize="16" FontWeight="Bold"
                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,10"/>
 
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,41,0,235" Grid.RowSpan="5" >
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,41,415,225" Grid.RowSpan="3" Width="150" >
             <CheckBox Content="Automation" Margin =" 0,41,0,10" Style="{StaticResource CustomCheckBox}"
                       Checked="Automation_CheckBox_Checked"
-                      Unchecked="Automation_CheckBox_Unchecked" IsChecked="False"/>
+                      Unchecked="Automation_CheckBox_Unchecked" IsChecked="False" Height="26"/>
             <CheckBox Content="BarCode" Style="{StaticResource CustomCheckBox}"
                       Checked="DataMatrix_CheckBox_Checked"
-                      Unchecked="DataMatrix_CheckBox_Unchecked" IsChecked="False"/>
+                      Unchecked="DataMatrix_CheckBox_Unchecked" IsChecked="False" Height="24"/>
         </StackPanel>
+        <Grid Margin="0,23,105,225" Grid.Row="2" HorizontalAlignment="Right" Width="355">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10*"/>
+                <RowDefinition/>
+                <RowDefinition Height="24*"/>
+            </Grid.RowDefinitions>
+            <ComboBox x:Name="firstComboBox" Height="30"
+                  ItemsSource="{Binding FirstOptions}"
+                  Margin="115,14,115,0"
+                  VerticalAlignment="Top" Grid.RowSpan="3" 
+                  SelectionChanged="firstComboBox_SelectionChanged"/>
 
+            <ComboBox x:Name="secondComboBox" Height="30"
+                    ItemsSource="{Binding SecondOptions}"
+                  Margin="115,21,115,0"
+                  VerticalAlignment="Top" Grid.Row="2" />
+        </Grid>
         <TextBox x:Name="serial_number_TextBox" Grid.Row="2"
                  HorizontalAlignment="Center" VerticalAlignment="Top"
                  Width="270" Height="50" Style="{StaticResource CustomTextBox}"

@@ -5,15 +5,16 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Threading;
+using Main_Server.DTOs.Ezcade;
 
 namespace EZcade_Client
 {
     public class Connection_Handler
     {
         #region Fields
-        //public string serverIp = "127.0.0.1";
+        public string serverIp = "127.0.0.1";
         //public string serverIp = "213.207.200.115";
-        public string serverIp = "192.168.1.122";
+        //public string serverIp = "192.168.1.122";
         public int serverPort = 1001;
         public bool server_connection_status { get; set; }
         public TcpClient client;
@@ -40,6 +41,16 @@ namespace EZcade_Client
         #endregion
 
         #region Methods
+
+        public BatchListDto_Ezcade GetBatchList()
+        {
+            var Request = new JsonObject();
+            Request["requestType"] = "batchList";
+            var response = Request_Json(Request);
+
+            string json = response["data"]!.GetValue<string>();
+            return JsonSerializer.Deserialize<BatchListDto_Ezcade>(json);
+        }
 
         #region Encryption Methods
         public static string EncryptData(string data)
