@@ -12,9 +12,9 @@ namespace EZcade_Client
     public class Connection_Handler
     {
         #region Fields
-        public string serverIp = "127.0.0.1";
+        //public string serverIp = "127.0.0.1";
         //public string serverIp = "213.207.200.115";
-        //public string serverIp = "192.168.1.122";
+        public string serverIp = "192.168.1.122";
         public int serverPort = 1001;
         public bool server_connection_status { get; set; }
         public TcpClient client;
@@ -54,7 +54,9 @@ namespace EZcade_Client
 
         #region Encryption Methods
         public static string EncryptData(string data)
+            
         {
+            return data;
             using (Aes aesAlg = Aes.Create())
             {
                 aesAlg.Key = Convert.FromBase64String("5EjbJ1cMefXwTG8vqn5WPkpQbV5LZp89JaXbkGgNctM=");
@@ -73,6 +75,7 @@ namespace EZcade_Client
 
         public static string DecryptData(string encryptedData)
         {
+            return encryptedData;
             using (Aes aesAlg = Aes.Create())
             {
                 aesAlg.Key = Convert.FromBase64String("5EjbJ1cMefXwTG8vqn5WPkpQbV5LZp89JaXbkGgNctM=");
@@ -97,12 +100,37 @@ namespace EZcade_Client
             string request_jsonString = JsonSerializer.Serialize(request);
             request_jsonString = EncryptData(request_jsonString);
             byte[] dataToSend = Encoding.UTF8.GetBytes(request_jsonString);
+
+            int dataLength_send = dataToSend.Length;
+            byte[] lengthBytes = BitConverter.GetBytes(dataLength_send);
+            stream.Write(lengthBytes, 0, lengthBytes.Length);
+
             stream.Write(dataToSend, 0, dataToSend.Length);
 
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
-            string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            byte[] lengthBuffer = new byte[4];
+            int bytesRead = 0;
+            while (bytesRead < 4)
+            {
+                bytesRead += stream.Read(lengthBuffer, bytesRead, 4 - bytesRead);
+            }
+
+            int dataLength = BitConverter.ToInt32(lengthBuffer, 0);
+
+            byte[] dataBuffer = new byte[dataLength];
+            int totalBytesRead = 0;
+            while (totalBytesRead < dataLength)
+            {
+                int chunkSize = stream.Read(dataBuffer, totalBytesRead, dataLength - totalBytesRead);
+                totalBytesRead += chunkSize;
+            }
+
+
+
+
+            string response_jsonString = Encoding.UTF8.GetString(dataBuffer);
+
+
             response_jsonString = DecryptData(response_jsonString);
             JsonObject response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
             return response;
@@ -114,33 +142,33 @@ namespace EZcade_Client
                 var Request = new JsonObject();
                 Request["requestType"] = "status";
 
-                string jsonString = JsonSerializer.Serialize(Request);
-                jsonString = EncryptData(jsonString);
+                //string jsonString = JsonSerializer.Serialize(Request);
+                //jsonString = EncryptData(jsonString);
 
-                byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
-                if (stream != null)
-                {
-                    stream.Write(dataToSend, 0, dataToSend.Length);
-                }
-                else
-                {
-                    return false;
-                }
+                //byte[] dataToSend = Encoding.UTF8.GetBytes(jsonString);
+                //if (stream != null)
+                //{
+                //    stream.Write(dataToSend, 0, dataToSend.Length);
+                //}
+                //else
+                //{
+                //    return false;
+                //}
 
-                byte[] buffer = new byte[1024];
-                int bytesRead = 0;
+                //byte[] buffer = new byte[1024];
+                //int bytesRead = 0;
 
-                bytesRead = stream.Read(buffer, 0, buffer.Length);
-                if (bytesRead == 0)
-                {
-                    server_connection_status = false;
-                    return false;
-                }
+                //bytesRead = stream.Read(buffer, 0, buffer.Length);
+                //if (bytesRead == 0)
+                //{
+                //    server_connection_status = false;
+                //    return false;
+                //}
 
-                string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                response_jsonString = DecryptData(response_jsonString);
-                var Response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
-
+                //string response_jsonString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                //response_jsonString = DecryptData(response_jsonString);
+                //var Response = JsonSerializer.Deserialize<JsonObject>(response_jsonString);
+                var Response = Request_Json(Request);
                 if (Response["status"].ToString() == "is_connected")
                 {
                     server_connection_status = true;
@@ -162,6 +190,7 @@ namespace EZcade_Client
                 return false;
             }
         }
+
         public void CloseConnection()
         {
             try

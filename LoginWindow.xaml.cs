@@ -6,11 +6,11 @@ namespace EZcade_Client
 {
     public partial class LoginWindow : Window
     {
-        private Connection_Handler _connection_Handler;
+        private HttpConnectionHandler _connection_Handler;
         public string Username { get; private set; }
         public string Password { get; private set; }
 
-        public LoginWindow(Connection_Handler connection)
+        public LoginWindow(HttpConnectionHandler connection)
         {
             InitializeComponent();
             _connection_Handler = connection;
@@ -37,11 +37,12 @@ namespace EZcade_Client
                 login_request["username"] = Username;
                 login_request["password"] = Password;
 
-                login_response = _connection_Handler.Request_Json(login_request);
+                var result = _connection_Handler.LoginAsync(Username, Password);
 
-                if (login_response == null || login_response["result"].ToString() != "true")
+                if (!result)
                 {
                     MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+
                     return;
                 }
 

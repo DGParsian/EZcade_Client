@@ -3,13 +3,15 @@ using System.Text.Json.Nodes;
 using EZcade_Client.Properties;
 using System.Windows.Controls;
 using Main_Server.DTOs.Ezcade;
+using System.Text.Json;
+using EZcade_Client.EzcadeDtos;
 
 namespace EZcade_Client
 {
     public partial class MainWindow : Window
     {
         #region Fields
-        public Connection_Handler connection_handler { get; internal set; }
+        public HttpConnectionHandler connection_handler { get; internal set; }
         public EZcade_Connection_Handler ezcade_Connection_Handler { get; internal set; }
 
         Thread EZcade_Listen_Thread;
@@ -19,11 +21,13 @@ namespace EZcade_Client
 
         private bool IsAutomated = false;
         private bool IsDataMatrixActive = false;
+        public int QueryCount { get; set; }
+        public string QueryType { get; set; }
 
         public List<string> FirstOptions { get; set; } = new() { "Select Batch"};
         public List<string> SecondOptions { get; set; } = new() { "Select Model"};
 
-        public BatchListDto_Ezcade batchList{ get; set; }
+        public ListDto<BatchDto> BatchList { get; set; }
 
         #endregion
 
@@ -31,7 +35,7 @@ namespace EZcade_Client
         public MainWindow()
         {
             InitializeComponent();
-            connection_handler = new Connection_Handler();
+            connection_handler = new HttpConnectionHandler(); // Set correct base URL
 
             if (!AutoLogin(connection_handler))
             {
@@ -39,65 +43,98 @@ namespace EZcade_Client
                 loginWindow.ShowDialog();
             }
 
-            if (connection_handler.Status_Check())
+            Loaded += MainWindow_Loaded;
+
+            DataContext = this;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if ( connection_handler.StatusCheckAsync())
             {
                 Show_ip();
                 Init_Form();
             }
             else
             {
-                MessageBox.Show("not connected");
+                MessageBox.Show("Not connected to server", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
-            DataContext = this;
+
+            BatchList =  connection_handler.GetBatchListAsync();
+
+            foreach (var batch in BatchList.Items)
+            {
+                FirstOptions.Add(batch.BatchName);
+            }
+
             firstComboBox.SelectedIndex = 0;
             secondComboBox.SelectedIndex = 0;
-
-
-
-            batchList = connection_handler.GetBatchList();
-
-            foreach (var batch in batchList.Batches)
-            {
-                FirstOptions.Add(batch.Name);
-            }
-            
         }
         #endregion
 
         #region Initialization
 
-        private bool AutoLogin(Connection_Handler connection_Handler)
+        //private bool AutoLogin(Connection_Handler connection_Handler)
 
+        //{
+
+        //    //Settings.Default.SavedPassword = "";
+        //    //Settings.Default.Save();
+        //    var username = Settings.Default.SavedUsername;
+        //    var password = Settings.Default.SavedPassword;
+
+        //    if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        //    {
+        //        return false;
+        //    }
+
+        //    JsonObject login_response = new JsonObject();
+        //    JsonObject login_request = new JsonObject();
+
+        //    login_request["requestType"] = "login";
+
+        //    login_request["userRole"] = "Ezcade_operator";
+        //    login_request["username"] = username;
+        //    login_request["password"] = password;
+
+        //    login_response = connection_Handler.Request_Json(login_request);
+
+        //    if (login_response == null || login_response["result"].ToString() != "true")
+        //    {
+        //        MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //        return false ;
+        //    }
+        //     return true;
+
+        //}
+        private bool AutoLogin(HttpConnectionHandler connection_Handler)
         {
-
-            //Settings.Default.SavedPassword = "";
-            //Settings.Default.Save();
             var username = Settings.Default.SavedUsername;
             var password = Settings.Default.SavedPassword;
-            
+
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 return false;
             }
-            
-            JsonObject login_response = new JsonObject();
-            JsonObject login_request = new JsonObject();
 
-            login_request["requestType"] = "login";
-
-            login_request["userRole"] = "Ezcade_operator";
-            login_request["username"] = username;
-            login_request["password"] = password;
-
-            login_response = connection_Handler.Request_Json(login_request);
-
-            if (login_response == null || login_response["result"].ToString() != "true")
+            try
             {
-                MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false ;
-            }
-            return true;
+                bool success = connection_Handler.LoginAsync(username, password);
 
+                if (!success)
+                {
+                    MessageBox.Show("Login Failed.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Login Error: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
         }
 
 
@@ -147,82 +184,89 @@ namespace EZcade_Client
         #endregion
 
         #region Request Handling
-        private void Request_recived(string request)
+        private void Request_recived(string recived_string  )
         {
-            request = request.ToUpper();
-            if (request != "")
+            recived_string = recived_string.ToUpper();
+
+            string model = firstComboBox.Dispatcher.Invoke(() => secondComboBox.SelectedItem?.ToString().ToUpper());
+            string batch = firstComboBox.Dispatcher.Invoke(() => firstComboBox.SelectedItem?.ToString());
+
+            if (recived_string != "")
             {
-                if (request != "ERROR")
+                if (recived_string != "ERROR")
                 {
-                    var Request = new JsonObject();
-                    if (request == "TCP:Give me string")
-                    {
-                        Request["requestType"] = "test";
-                    }
-                    else
-                    {
-                        Request["requestType"] = "serialNumber";
+                    SerialNumberQuery request = new(recived_string);
+                    string serialNumber = connection_handler.GetSerialNumber(request, batch);
 
-                        
-                        Request["model"] = request;
-                        Request["batch"] = firstComboBox.SelectedItem.ToString();
-                    }
 
-                    if (request == secondComboBox.SelectedItem.ToString())
-                    {
-                        var Response = connection_handler.Request_Json(Request);
 
-                        if (IsAutomated)
-                        {
-
-                            print_Automated(Response["serialNumber"].ToString());
-                        }
-                        else
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                serial_number_TextBox.Text = Response["serialNumber"].ToString();
-                                Enable_serialNumber_inteaction();
-                            });
-                        }
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("selected model is not the same as laser file configuration");
-                    }
 
                     
 
+
+                    HandleQueryResponse(request, serialNumber, 1);
                 }
             }
         }
-
-        private void print_Automated(string serialNumber)
+        private void HandleQueryResponse(SerialNumberQuery query,string serialNumber, int index)
         {
-            activate_product(serialNumber);
-            ezcade_Connection_Handler.SendAndPrint(serialNumber);
+            var serialNumber_to_print = query.GetSerialNumber(serialNumber);
+            QueryType = query.Type;
 
-            if (IsDataMatrixActive)
+            if (IsAutomated)
             {
-                ezcade_Connection_Handler.Listen();
-                ezcade_Connection_Handler.SendAndPrint(serialNumber);
+                ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
+                QueryCount = query.Count - 1;
+                HandleQueries(serialNumber);
             }
+            else
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    serial_number_TextBox.Text = serialNumber_to_print;
+                    Enable_serialNumber_inteaction();
+                });
+                QueryCount = query.Count - 1;
+            }
+        }
 
+        private void HandleQueries(string serialNumber)
+        {
 
             
+            for (int i = 0; i < QueryCount; i++)
+            {
+                var newRecived_string = ezcade_Connection_Handler.Listen();
+                SerialNumberQuery query = new(newRecived_string);
+                var serialNumber_to_print = query.GetSerialNumber(serialNumber);
+                ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
+            }
+            if (QueryType == "PR")
+            {
+                var response = connection_handler.Activation(serialNumber, "product");
+            }
+            else if(QueryType == "PB")
+            {
+                var response = connection_handler.Activation(serialNumber, "pcb");
+            }
+            
+
+
             EZcade_Listen_Thread = new Thread(() =>
             {
                 try
                 {
                     string request = ezcade_Connection_Handler.Listen();
                     Request_recived(request);
+                    
                 }
                 catch { }
             });
 
             EZcade_Listen_Thread.Start();
         }
+
+
         #endregion
 
         #region UI Updates
@@ -232,14 +276,14 @@ namespace EZcade_Client
             var selectedBatch = firstComboBox.SelectedItem as string;
             SecondOptions.Clear();
             SecondOptions.Add("Select Model");
-            foreach (var batch in batchList.Batches)
+            foreach (var batch in BatchList.Items)
             {
-                if (selectedBatch == batch.Name)
+                if (selectedBatch == batch.BatchName)
                 {
                     
-                    foreach (var model in batch.Models)
+                    foreach (var part in batch.BatchParts)
                     {
-                        SecondOptions.Add(model);
+                        SecondOptions.Add(part.Model);
                     }
                 }                
             }
@@ -276,38 +320,32 @@ namespace EZcade_Client
         private void print_Buttun_Click(object sender, RoutedEventArgs e)
         {
             Disable_serialNumber_inteaction();
-            activate_product(serial_number_TextBox.Text);
             ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text,showMessage:true);
 
-            if (IsDataMatrixActive)
-            {
-                ezcade_Connection_Handler.Listen();
-                ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text);
-            }
-
             
+            HandleQueries(RemovePrefix(serial_number_TextBox.Text));
+
             serial_number_TextBox.Text = "start requesting in EZcade";
-            EZcade_Listen_Thread = new Thread(() =>
-            {
-                try
-                {
-                    string request = ezcade_Connection_Handler.Listen();
-                    Request_recived(request);
-                }
-                catch { }
-            });
 
-            EZcade_Listen_Thread.Start();
         }
-
+        public string RemovePrefix(string input)
+        {
+            if (input.StartsWith("PR"))
+                return input.Substring(2);
+            if (input.StartsWith("PB"))
+                return input.Substring(2);
+            return input;
+        }
         private void activate_product(string serialNumber)
         {
             var Request = new JsonObject();
             Request["requestType"] = "activation";
 
             Request["serialNumber"] = serialNumber;
-            var Response = connection_handler.Request_Json(Request);
+
             
+
+
         }
 
         private void Edit_Button_Click(object sender, RoutedEventArgs e)

@@ -60,15 +60,19 @@ namespace EZcade_Client
             }
         }
 
-        public void SendAndPrint(String response, bool showMessage = false)
+        public void SendAndPrint(String response, bool showMessage = true)
         {
             try
             {
+                //MessageBox.Show("printed " );
                 byte[] responseBytes = Encoding.ASCII.GetBytes(response);
                 Ezcadestream.Write(responseBytes, 0, responseBytes.Length);
                 if (showMessage)
                 {
-                    MessageBox.Show("printed " + response);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show("printed " + response);
+                    });
                 }
                 
             }
