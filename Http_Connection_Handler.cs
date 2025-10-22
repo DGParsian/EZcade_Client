@@ -10,9 +10,9 @@ namespace EZcade_Client
     public class HttpConnectionHandler
     {
         private readonly HttpClient _httpClient;
-        //private readonly string? _base_address = "http://192.168.1.243:8080/";
-
-        private readonly string? _base_address = "http://127.0.0.1:5218/";
+        //private readonly string? _base_address = "http://192.168.1.236:8080/";
+        private readonly string? _base_address = "http://192.168.1.122:8080/";
+        //private readonly string? _base_address = "http://127.0.0.1:5218/";
         private readonly string? _base_route = "api/ezcade_client/main/";
         public readonly string? serverIp = "localhost";
         public readonly string? serverPort = "5218";
@@ -62,7 +62,7 @@ namespace EZcade_Client
             return ServerConnectionStatus;
         }
 
-        public ListDto<BatchDto> GetBatchListAsync()
+        public ListDto<BatchDto> GetBatchListAsync_legacy()
         {
             var response = _httpClient.GetAsync(_base_route + "Batches").GetAwaiter().GetResult();
 
@@ -81,7 +81,25 @@ namespace EZcade_Client
 
             return result;
         }
+        public ListDto<string> GetComponentBatchListAsync()
+        {
+            var response = _httpClient.GetAsync(_base_route + "ComponentBatches").GetAwaiter().GetResult();
 
+            if (!response.IsSuccessStatusCode)
+            {
+                ServerConnectionStatus = false;
+                return null;
+            }
+
+            var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            var result = JsonSerializer.Deserialize<ListDto<string>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return result;
+        }
 
 
 
@@ -104,7 +122,7 @@ namespace EZcade_Client
             string jsonResponse = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<JsonObject>(jsonResponse);
         }
-        public string GetSerialNumber(SerialNumberQuery Query, string batchName)
+        public SerialNumberDto GetSerialNumber(SerialNumberQuery Query, string batchName)
         {
             var request = new SerialNumberRequest
             {
@@ -112,9 +130,6 @@ namespace EZcade_Client
                 ProductModel = Query.ProductModel,
                 Type = Query.Type,
 
-
-
-                
             };
 
             if (Query.PcbModel != null)
@@ -125,7 +140,7 @@ namespace EZcade_Client
             string res = response.ToString();
 
             if (!response.IsSuccessStatusCode)
-                return "";
+                return new() ;
 
             var resultJson = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             var dto = JsonSerializer.Deserialize<SerialNumberDto>(resultJson, new JsonSerializerOptions
@@ -133,7 +148,7 @@ namespace EZcade_Client
                 PropertyNameCaseInsensitive = true
             });
 
-            return dto?.SerialNumber ?? "";
+            return dto;
         }
 
         public bool Activation (string serialNumber, string fullType)

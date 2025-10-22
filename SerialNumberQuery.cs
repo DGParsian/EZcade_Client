@@ -40,14 +40,29 @@ public class SerialNumberQuery
                 throw new FormatException("The last part must be a valid integer.");
             Count = count;
         }
+        else if (Type == "CO")
+        {
+            if (parts.Length != 4)
+                throw new FormatException("Input must contain exactly four parts: Model, Type, CodeType, and Count.");
+
+            ProductModel = parts[1];
+
+            ProductModel =  ProductModel.Replace("$" , " ");
+            CodeType = parts[2];
+
+            if (!int.TryParse(parts[3], out int count))
+                throw new FormatException("The last part must be a valid integer.");
+
+            Count = count;
+        }
         else
         {
-            throw new ArgumentException("Invalid Type. Expected 'PR' or 'PB'.");
+            throw new ArgumentException("Invalid Type. Expected 'PR' or 'PB' or 'DM'.");
 
         }
     }
 
-    public string GetSerialNumber(string serialNumber)
+    public string GetSerialNumber(string serialNumber , string dmCode)
     {
         if (Type == "PR")
         {
@@ -62,6 +77,13 @@ public class SerialNumberQuery
             if (CodeType == "DM")
             {
                 serialNumber = "PB" + serialNumber;
+            }
+        }
+        else if (Type == "CO")
+        {
+            if (CodeType == "DM")
+            {
+                serialNumber = dmCode;
             }
         }
 

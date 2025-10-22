@@ -25,7 +25,7 @@ namespace EZcade_Client
         public string QueryType { get; set; }
 
         public List<string> FirstOptions { get; set; } = new() { "Select Batch"};
-        public List<string> SecondOptions { get; set; } = new() { "Select Model"};
+        //public List<string> SecondOptions { get; set; } = new() { "Select Model"};
 
         public ListDto<BatchDto> BatchList { get; set; }
 
@@ -61,15 +61,15 @@ namespace EZcade_Client
                 return;
             }
 
-            BatchList =  connection_handler.GetBatchListAsync();
+            var batchList =  connection_handler.GetComponentBatchListAsync();
 
-            foreach (var batch in BatchList.Items)
+            foreach (var batch in batchList.Items)
             {
-                FirstOptions.Add(batch.BatchName);
+                FirstOptions.Add(batch);
             }
 
             firstComboBox.SelectedIndex = 0;
-            secondComboBox.SelectedIndex = 0;
+            //secondComboBox.SelectedIndex = 0;
         }
         #endregion
 
@@ -183,12 +183,14 @@ namespace EZcade_Client
         }
         #endregion
 
+
+        public SerialNumberDto SerialNumberObj;
         #region Request Handling
         private void Request_recived(string recived_string  )
         {
             recived_string = recived_string.ToUpper();
 
-            string model = firstComboBox.Dispatcher.Invoke(() => secondComboBox.SelectedItem?.ToString().ToUpper());
+            //string model = firstComboBox.Dispatcher.Invoke(() => secondComboBox.SelectedItem?.ToString().ToUpper());
             string batch = firstComboBox.Dispatcher.Invoke(() => firstComboBox.SelectedItem?.ToString());
 
             if (recived_string != "")
@@ -196,28 +198,29 @@ namespace EZcade_Client
                 if (recived_string != "ERROR")
                 {
                     SerialNumberQuery request = new(recived_string);
-                    string serialNumber = connection_handler.GetSerialNumber(request, batch);
+                    SerialNumberObj = connection_handler.GetSerialNumber(request, batch);
 
-
+                    
 
 
                     
 
 
-                    HandleQueryResponse(request, serialNumber, 1);
+                    HandleQueryResponse(request, SerialNumberObj.SerialNumber , SerialNumberObj.DmCode, 1);
                 }
             }
         }
-        private void HandleQueryResponse(SerialNumberQuery query,string serialNumber, int index)
+        private void HandleQueryResponse(SerialNumberQuery query,string serialNumber, string dmCode, int index)
         {
-            var serialNumber_to_print = query.GetSerialNumber(serialNumber);
+            var serialNumber_to_print = query.GetSerialNumber(serialNumber , dmCode);
             QueryType = query.Type;
 
             if (IsAutomated)
             {
-                ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
+                if (SerialNumberObj.SerialNumber != "ERROR")
+                    ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
                 QueryCount = query.Count - 1;
-                HandleQueries(serialNumber);
+                HandleQueries(serialNumber , dmCode);
             }
             else
             {
@@ -230,7 +233,7 @@ namespace EZcade_Client
             }
         }
 
-        private void HandleQueries(string serialNumber)
+        private void HandleQueries(string serialNumber , string dmCode)
         {
 
             
@@ -238,8 +241,11 @@ namespace EZcade_Client
             {
                 var newRecived_string = ezcade_Connection_Handler.Listen();
                 SerialNumberQuery query = new(newRecived_string);
-                var serialNumber_to_print = query.GetSerialNumber(serialNumber);
-                ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
+                var serialNumber_to_print = query.GetSerialNumber(serialNumber , dmCode);
+                if(SerialNumberObj.SerialNumber != "ERROR")
+                {
+                    ezcade_Connection_Handler.SendAndPrint(serialNumber_to_print, showMessage: true);
+                }
             }
             if (QueryType == "PR")
             {
@@ -274,22 +280,22 @@ namespace EZcade_Client
         private void firstComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedBatch = firstComboBox.SelectedItem as string;
-            SecondOptions.Clear();
-            SecondOptions.Add("Select Model");
-            foreach (var batch in BatchList.Items)
-            {
-                if (selectedBatch == batch.BatchName)
-                {
+            //SecondOptions.Clear();
+            //SecondOptions.Add("Select Model");
+            //foreach (var batch in BatchList.Items)
+            //{
+            //    if (selectedBatch == batch.BatchName)
+            //    {
                     
-                    foreach (var part in batch.BatchParts)
-                    {
-                        SecondOptions.Add(part.Model);
-                    }
-                }                
-            }
-            secondComboBox.ItemsSource = null;
-            secondComboBox.SelectedIndex = 0;
-            secondComboBox.ItemsSource = SecondOptions;
+            //        foreach (var part in batch.BatchParts)
+            //        {
+            //            SecondOptions.Add(part.Model);
+            //        }
+            //    }                
+            //}
+            //secondComboBox.ItemsSource = null;
+            //secondComboBox.SelectedIndex = 0;
+            //secondComboBox.ItemsSource = SecondOptions;
         }
 
 
@@ -316,6 +322,8 @@ namespace EZcade_Client
         }
         #endregion
 
+
+
         #region Event Handlers
         private void print_Buttun_Click(object sender, RoutedEventArgs e)
         {
@@ -323,7 +331,7 @@ namespace EZcade_Client
             ezcade_Connection_Handler.SendAndPrint(serial_number_TextBox.Text,showMessage:true);
 
             
-            HandleQueries(RemovePrefix(serial_number_TextBox.Text));
+            HandleQueries(RemovePrefix(serial_number_TextBox.Text) , SerialNumberObj.DmCode);
 
             serial_number_TextBox.Text = "start requesting in EZcade";
 
